@@ -6,7 +6,6 @@ const fs = require("fs");
 const readXlsxFile = require("read-excel-file/node");
 const mongoose = require("mongoose");
 const User = require("./models/user");
-const helper = require("./helper");
 var validator = require("validator");
 
 const mongoURI =
