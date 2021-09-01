@@ -1,0 +1,7 @@
+file upload 
+name address empcode designation email mobileno 
+
+validate the data 
+if empcode is already present dont insert 
+send response 
+with successful insertion and rejected count 

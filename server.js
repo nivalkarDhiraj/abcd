@@ -44,30 +44,35 @@ var upload = multer({
 });
 
 app.post("/excel", upload.single("excel"), async (req, res) => {
-	const rows = await readXlsxFile(path.join(__dirname, "uploads", req.file.filename));
-	// const rows = await readXlsxFile(path.join(__dirname, "empdata.xlsx"));
+	try {
+		const rows = await readXlsxFile(path.join(__dirname, "uploads", req.file.filename));
+		// const rows = await readXlsxFile(path.join(__dirname, "empdata.xlsx"));
 
-	// readXlsxFile(path.join(__dirname, "empdata.xlsx")).then(async (rows) => {
-	// `rows` is an array of rows
-	// each row being an array of cells.
-	// console.log("row",rows);
-	const columns = rows[0];
+		// readXlsxFile(path.join(__dirname, "empdata.xlsx")).then(async (rows) => {
+		// `rows` is an array of rows
+		// each row being an array of cells.
+		// console.log("row",rows);
+		const columns = rows[0];
 
-	rows.shift(); // removing the column row
+		rows.shift(); // removing the column row
 
-	let rejectionCount = 0;
-	let successfulInsertionCount = 0;
+		let rejectionCount = 0;
+		let successfulInsertionCount = 0;
 
-	for (let i = 0; i < rows.length; i++) {
-		let validUser = await addUser(rows[i]);
-		validUser ? ++successfulInsertionCount : ++rejectionCount;
+		for (let i = 0; i < rows.length; i++) {
+			let validUser = await addUser(rows[i]);
+			validUser ? ++successfulInsertionCount : ++rejectionCount;
+		}
+		console.log("done");
+		console.log({ successfulInsertionCount, rejectionCount });
+
+		res.send(`${successfulInsertionCount} rows inserted, ${rejectionCount} rows rejected`);
+
+		fs.unlink(path.join(__dirname, "uploads", req.file.filename), () => {}); //removing temporary file
+	} catch (err) {
+		res.send("Something went wrong");
+		console.log(err);
 	}
-	console.log("done");
-	console.log({ successfulInsertionCount, rejectionCount });
-
-	res.send(`${successfulInsertionCount} rows inserted, ${rejectionCount} rows rejected`);
-
-	fs.unlink(path.join(__dirname, "uploads", req.file.filename), () => {}); //removing temporary file
 });
 
 app.listen(PORT, () => {
@@ -75,31 +80,33 @@ app.listen(PORT, () => {
 });
 
 const addUser = async (row) => {
-	const name = row[0];
-	const address = row[1];
-	const empid = row[2];
-	const designation = row[3];
-	const email = row[4];
-	const mobileno = row[5];
+	try {
+		const name = row[0];
+		const address = row[1];
+		const empid = row[2];
+		const designation = row[3];
+		const email = row[4];
+		const mobileno = row[5];
 
-	if (!validator.isEmail(email) || !validator.isMobilePhone(mobileno.toString())) return false;
+		if (!validator.isEmail(email) || !validator.isMobilePhone(mobileno.toString())) return false;
 
-	let user = await User.findOne({ empid: empid });
-	if (user) return false;
+		let user = await User.findOne({ empid: empid });
+		if (user) return false;
 
-	const newUser = new User({
-		name,
-		address,
-		empid,
-		designation,
-		email,
-		mobileno,
-	});
+		const newUser = new User({
+			name,
+			address,
+			empid,
+			designation,
+			email,
+			mobileno,
+		});
 
-	let new_user = await newUser.save();
+		let new_user = await newUser.save();
 
-	return new_user ? true : false;
+		return new_user ? true : false;
+	} catch (err) {
+		res.send("Something went wrong");
+		console.log(err);
+	}
 };
-
-// manjiri.shevde@dealmoney.in
-// mahesh.patil@dealmoney.in
